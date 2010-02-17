@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app>
+  <display-name>Miso App</display-name>
+
+  <!-- Declare the existence of a servlet. -->
+  <servlet>
+    <servlet-name>Application</servlet-name>
+    <servlet-class>Application</servlet-class>
+  </servlet>
+
+  <!-- Map URLs to that servlet. -->
+  <servlet-mapping>
+    <servlet-name>Application</servlet-name>
+    <url-pattern>/app</url-pattern>
+  </servlet-mapping>
+</web-app>

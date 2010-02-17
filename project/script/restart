@@ -1,0 +1,4 @@
+#!/bin/bash -e
+
+echo "Hello Miso!"
+../jetty/bin/jetty.sh restart
