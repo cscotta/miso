@@ -1,0 +1,138 @@
+#!/usr/bin/env ruby
+require 'ftools'
+
+def load_template(path)
+  template = ""
+  file = File.new(path, "r")
+  while (line = file.gets)
+    template += line
+  end
+  file.close
+  return template
+end
+
+def generate(template, model, columns)
+  template.gsub!('[[ModelNameLowercase]]', model.downcase)
+  template.gsub!('[[ModelNameCapitalized]]', model.capitalize)
+
+  # Model Definition
+  getter_and_setter_definition = ""
+  columns.each do |column|
+    getter_and_setter_definition += "public String get#{column.capitalize}();\n  "
+    getter_and_setter_definition += "public void set#{column.capitalize}(String #{column});\n  "
+  end
+  template.gsub!('[[GetterAndSetterDefinition]]', getter_and_setter_definition)
+  
+  
+  # Model Access
+  json_output_for_columns = ""
+  columns.each do |column|
+    json_output_for_columns += "json.put(\"#{column}\", #{model.downcase}.get#{column.capitalize}());\n    "
+  end
+  template.gsub!('[[JSONOutputForColumns]]', json_output_for_columns)
+  
+  setters_from_params = ""
+  columns.each do |column|
+    setters_from_params += "#{model.downcase}.set#{column.capitalize}(params.get(\"#{column}\").toString());\n    "
+  end
+  template.gsub!('[[SetterFromParamsImplementation]]', setters_from_params)
+
+  # New Template
+  fields_for_new_model = ""
+  columns.each do |column|
+    fields_for_new_model += "<label for=\"#{column}\">#{column.capitalize}: </label><input name=\"#{column}\" class=\"text\" type=\"text\" /><br />\n    "
+  end
+  template.gsub!('[[InputFieldsForNewModel]]', fields_for_new_model)
+
+
+  # Edit Template
+  fields_for_edit_model = ""
+  columns.each do |column|
+    fields_for_edit_model += "<label for=\"#{column}\">#{column.capitalize}: </label><input name=\"#{column}\" class=\"text\" type=\"text\" value=\"<%= #{model.downcase}.get#{column.capitalize}() %>\" /><br />\n    "
+  end
+  template.gsub!('[[InputFieldsForEditModel]]', fields_for_edit_model)
+
+  # Index Template
+  index_table_headings = ""
+  columns.each do |column|
+    index_table_headings += "<th>#{column.capitalize}</th>\n    "
+  end
+  template.gsub!('[[TableHeadingsForIndexColumnNames]]', index_table_headings)
+
+  index_td_content = ""
+  columns.each do |column|
+    index_td_content += "<td><%= #{model.downcase}.get#{column.capitalize}() %></td>\n    "
+  end
+  template.gsub!('[[TDsForIndexColumns]]', index_td_content)
+
+  # Show Template
+  show_columns = ""
+  columns.each do |column|
+    show_columns += "<p><strong>#{column.capitalize}:</strong> <%= #{model.downcase}.get#{column.capitalize}() %></p>\n    "
+  end
+  template.gsub!('[[ShowFieldsForColumns]]', show_columns)
+
+  # SQL
+  column_names = ""
+  columns.each do |column|
+    column_names += "`#{column}` varchar(255) DEFAULT NULL,\n"
+  end
+  template.gsub!('[[ColumnLinesForSQL]]', column_names)
+  
+  return template
+end
+
+puts "\nMISO GENERATOR 2000 =============================================\n"
+puts "=================================================================\n\n"
+if ARGV.size < 3 or ARGV[0] != 'scaffold'
+  puts "Sample Syntax: script/generate scaffold Puppy name breed owner cuteness\n\n"
+  Process.exit
+end
+
+model   = ARGV[1].capitalize
+columns = ARGV[2..ARGV.size]
+
+
+# Load Templates
+puts "Creating model #{model} with columns: #{columns.join(' ')}\n"
+controller        = load_template('script/generators/controllers/controller.java')
+model_definition  = load_template('script/generators/models/model_definition.java')
+model_access      = load_template('script/generators/models/model_access.java')
+
+index = load_template('script/generators/views/index.jsp')
+show  = load_template('script/generators/views/show.jsp')
+add   = load_template('script/generators/views/add.jsp')
+edit  = load_template('script/generators/views/edit.jsp')
+sql   = load_template('script/generators/table.sql')
+
+
+# Create directory for the views.
+File.makedirs "app/views/#{model.downcase}"
+
+puts "Generating Controller..."
+File.open("app/controllers/#{model.capitalize}Controller.java", 'w') {|f| f.write(generate(controller, model, columns)) }
+
+puts "Generating Model Definition..."
+File.open("app/models/#{model.capitalize}.java", 'w') {|f| f.write(generate(model_definition, model, columns)) }
+
+puts "Generating Model Access Layer..."
+File.open("app/models/#{model.capitalize}Model.java", 'w') {|f| f.write(generate(model_access, model, columns)) }
+
+puts "Generating Index Template..."
+File.open("app/views/#{model.downcase}/index.jsp", 'w') {|f| f.write(generate(index, model, columns)) }
+
+puts "Generating Show Template..."
+File.open("app/views/#{model.downcase}/show.jsp", 'w') {|f| f.write(generate(show, model, columns)) }
+
+puts "Generating Add Template..."
+File.open("app/views/#{model.downcase}/add.jsp", 'w') {|f| f.write(generate(add, model, columns)) }
+
+puts "Generating Edit Template..."
+File.open("app/views/#{model.downcase}/edit.jsp", 'w') {|f| f.write(generate(edit, model, columns)) }
+
+puts "Generating SQL...\n\n"
+puts "Please execute the following SQL before starting the app:\n\n"
+puts generate(sql, model, columns) + "\n\n"
+
+puts "Please add the following line to app/Application.java in the 'Import Controllers' section:"
+puts "import controllers.#{model.capitalize}Controller;\n\n"
