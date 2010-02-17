@@ -1,0 +1,4 @@
+jetty/ConnectionPoolManager.log
+jetty/lib/ext/*
+jetty/logs/*
+jetty/webapps/miso
