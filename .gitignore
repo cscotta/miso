@@ -1,4 +1,8 @@
 jetty/ConnectionPoolManager.log
 jetty/lib/ext/*
-jetty/logs/*
+jetty/logs/*.log
 jetty/webapps/miso
+miso/build/WEB-INF/*
+miso/build/WEB-INF/classes/*
+miso/build/views/*
+miso/build/css/*
