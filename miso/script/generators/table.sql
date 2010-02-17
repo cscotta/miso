@@ -1,6 +1,6 @@
 CREATE DATABASE IF NOT EXISTS miso;
 USE miso;
-CREATE TABLE `[[ModelNameLowercase]]` (
+CREATE TABLE IF NOT EXISTS `[[ModelNameLowercase]]` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   [[ColumnLinesForSQL]]
   PRIMARY KEY (`id`)
