@@ -1,9 +1,0 @@
-#!/bin/bash -e
-
-echo "Hello Miso!"
-../jetty/bin/jetty.sh start
-
-# Jetty barfs some stuff out on restart that doesn't
-# bring us back to a command prompt. Make that happen.
-sleep 2
-echo ""
